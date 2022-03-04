@@ -1,0 +1,23 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+body {
+}
+
+.navbar {
+    position: absolute;
+    top:0;
+}
+
+.game-container{
+    background-image: url("./images/pit.jpeg");
+    background-size:cover;
+    background-repeat: no-repeat;
+    background-position:center;
+    margin: 3vh;
+    height: 90vh;
+    width: auto;
+    border: 1px solid black;
+}
