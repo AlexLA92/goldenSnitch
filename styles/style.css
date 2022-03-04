@@ -6,11 +6,6 @@
 body {
 }
 
-.navbar {
-    position: absolute;
-    top:0;
-}
-
 .game-container{
     background-image: url("./images/pit.jpeg");
     background-size:cover;

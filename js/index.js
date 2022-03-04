@@ -57,21 +57,22 @@ class Player {
 
 class Snitch {
   constructor() {
+    this.x = ctx.canvas.width/2
+    this.y = ctx.canvas.height/2
+    this.img = new Image()
+    this.img.src = '../styles/images/golden_snitch.png';
+    this.velocity = 50
+    this.vAngle = Math.PI/4    
+    this.width = 150
+    this.height = 50
     this.size = 1
-    this.velocity = 20
-    this.vAngle = 0
-    this.x = 150
-    this.y = 250
-    this.radius = 30
     this.color = "yellow"
+    
+    this.imgRatio = this.img.width / this.img.height
   }
 
   draw(){
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-      ctx.closePath();
-      ctx.fillStyle = this.color;
-      ctx.fill();
+      ctx.drawImage(this.img, this.x, this.y, this.width,this.width/this.imgRatio)
     }
   }
 
@@ -100,8 +101,11 @@ function drawAll() {
 }
 
 function moveSnitch() {
-  snitch.x = snitch.x + Math.cos(snitch.vAngle)+snitch.velocity;
-  snitch.y = snitch.y + Math.sin(snitch.vAngle)+snitch.velocity;
+  snitch.vAngle += Math.PI/200 + Math.random()*Math.PI
+
+  snitch.x = snitch.x + Math.cos(snitch.vAngle)*snitch.velocity;
+  snitch.y = snitch.y + Math.sin(snitch.vAngle)*snitch.velocity;
+
 }
 
 function launchGame(){
@@ -116,7 +120,7 @@ const ctx = getAdjustedCanvas()
 snitch = new Snitch()
 snitch.draw()
 
-setInterval(launchGame, 1000)
+setInterval(launchGame, 100)
 
 
 
