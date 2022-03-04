@@ -3,16 +3,41 @@
     margin: 0;
 }
 
+
 body {
+    display:flex;
+    flex-direction: column;
+    height:100vh;
 }
+
 
 .game-container{
     background-image: url("./images/pit.jpeg");
     background-size:cover;
     background-repeat: no-repeat;
     background-position:center;
+    flex-grow : 1;
+    border: 1px solid black;
+}
+
+
+.information-container{
     margin: 3vh;
-    height: 90vh;
-    width: auto;
+    height: 3rem;
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+.chronometer-container{
+    font-size: 2rem;
+}
+
+.start-btn{
+    width : 150px;
+    text-align: center;
+    font-size: 2rem;
     border: 1px solid black;
 }
