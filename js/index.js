@@ -13,8 +13,7 @@ let sizeCoefficient = 0.03
 
 let fps = 100
 
-//let introAudio = new Audio('../styles/sound/theme-song.mp3');
-let introAudio = new Audio();
+let introAudio = new Audio('./styles/sound/theme-song.mp3');
 introAudio.play()
 
 
