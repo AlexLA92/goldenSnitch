@@ -8,7 +8,7 @@ ctx.canvas.width  = canvasElement.parentNode.offsetWidth
 ctx.canvas.height = canvasElement.parentNode.offsetHeight
 
 let snitchImg = new Image()
-snitchImg.src = '../styles/images/golden_snitch.png'
+snitchImg.src = './styles/images/golden_snitch.png'
 let sizeCoefficient = 0.03
 
 let fps = 100
@@ -18,8 +18,8 @@ let introAudio = new Audio();
 introAudio.play()
 
 
-let winAudio = new Audio('../styles/sound/win.mp3');
-let missAudio = new Audio('../styles/sound/miss.mp3');
+let winAudio = new Audio('./styles/sound/win.mp3');
+let missAudio = new Audio('./styles/sound/miss.mp3');
 
 
 
@@ -88,7 +88,7 @@ class Snitch {
     this.setStayPutStateTimeout = null
 
     this.isPlaying = false
-    this.flutterStereo = new Audio('../styles/sound/flutter-stereo.wav');
+    this.flutterStereo = new Audio('./styles/sound/flutter-stereo.wav');
     // The timeupdate trick is to avoid gaps when looping on the audio file. Found it on stackoverflow topic #7330023
     this.flutterStereo.addEventListener('timeupdate', function(){
         var buffer = .44
@@ -97,7 +97,7 @@ class Snitch {
             this.play()
         }
     });
-    this.flutterRigth = new Audio('../styles/sound/flutter-right.wav')
+    this.flutterRigth = new Audio('./styles/sound/flutter-right.wav')
     this.flutterRigth.addEventListener('timeupdate', function(){
       var buffer = .44
       if(this.currentTime > this.duration - buffer){
@@ -105,7 +105,7 @@ class Snitch {
           this.play()
       }
   });
-    this.flutterLeft = new Audio('../styles/sound/flutter-left.wav');
+    this.flutterLeft = new Audio('./styles/sound/flutter-left.wav');
     this.flutterLeft.addEventListener('timeupdate', function(){
       var buffer = .44
       if(this.currentTime > this.duration - buffer){
