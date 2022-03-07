@@ -11,6 +11,17 @@ let snitchImg = new Image()
 snitchImg.src = '../styles/images/golden_snitch.png'
 let sizeCoefficient = 0.03
 
+let fps = 100
+
+let introAudio = new Audio('../styles/sound/theme-song.mp3');
+introAudio.play()
+
+
+let winAudio = new Audio('../styles/sound/win.mp3');
+let missAudio = new Audio('../styles/sound/miss.mp3');
+
+
+
 
 /* ------- CLASSES ------- */
 class Game {
@@ -20,7 +31,6 @@ class Game {
     this.clockIntervalId = null
     this.gameIntervalId = null
     this.isOn = false
-    this.fps = 100
   }
 
   start() {
@@ -61,6 +71,7 @@ class Snitch {
     this.initWidth = snitchImg.width * sizeCoefficient
     this.initHeight = snitchImg.height * sizeCoefficient
     this.Z = 1
+    this.Zvariance =2
     this.previousZ = 1
     this.nextZ = 1
 
@@ -73,28 +84,116 @@ class Snitch {
 
     this.isChangingZone = false
     this.changeZoneTimeout = null
+    this.setStayPutStateTimeout = null
+
+    this.isPlaying = false
+    this.flutterStereo = new Audio('../styles/sound/flutter-stereo.wav');
+    // The timeupdate trick is to avoid gaps when looping on the audio file. Found it on stackoverflow topic #7330023
+    this.flutterStereo.addEventListener('timeupdate', function(){
+        var buffer = .44
+        if(this.currentTime > this.duration - buffer){
+            this.currentTime = 0
+            this.play()
+        }
+    });
+    this.flutterRigth = new Audio('../styles/sound/flutter-right.wav')
+    this.flutterRigth.addEventListener('timeupdate', function(){
+      var buffer = .44
+      if(this.currentTime > this.duration - buffer){
+          this.currentTime = 0
+          this.play()
+      }
+  });
+    this.flutterLeft = new Audio('../styles/sound/flutter-left.wav');
+    this.flutterLeft.addEventListener('timeupdate', function(){
+      var buffer = .44
+      if(this.currentTime > this.duration - buffer){
+          this.currentTime = 0
+          this.play()
+      }
+  });
+
   }
 
+  playFlutter(){
+    this.flutterStereo.play()
+    this.flutterStereo.volume = 0.5
+    this.flutterRigth.play()
+    this.flutterRigth.volume = 0
+    this.flutterLeft.play()
+    this.flutterLeft.volume = 0
+    this.isPlaying = true
+  }
+
+  stopFlutter(){
+    this.flutterStereo.pause() 
+    this.flutterRigth.pause()
+    this.flutterLeft.pause()
+    this.isPlaying = false
+  }
+
+  
   setChangeZoneState(){
     this.isChangingZone = true
 
     this.transitionDuration = 150+Math.random()*250
     this.previousZ = this.nextZ
     this.Z = this.previousZ
-    this.nextZ = 0.0 + Math.random()
+    this.nextZ = 0.0 + Math.random()*this.Zvariance 
+
     this.changeZoneTimeout = setTimeout(() => this.setStayPutState(),this.transitionDuration)
-    console.log('previousZ', this.previousZ)
-    console.log('nextZ', this.nextZ)
   }
   
+  isInBottomLeftCornerMargin(marginX, marginY){
+    return (this.x > 0 && this.x < marginX && this.y > ctx.canvas.height / 2 && this.y < ctx.canvas.height) || (this.x > 0 && this.x < marginX && this.y > ctx.canvas.height / 2 && this.y < ctx.canvas.height) 
+  }
+
+  isInRightMargin(){
+    let outOfBondMarginX = ctx.canvas.width / 10
+    return (this.x > ctx.canvas.width - outOfBondMarginX && this.x < ctx.canvas.width )
+  }
+  
+  isInTopMargin(){
+    let outOfBondMarginY = ctx.canvas.height / 10
+    return (this.y > 0 && this.y < outOfBondMarginY )
+  }
+  
+  isInBottomMargin(){
+    let outOfBondMarginY = ctx.canvas.height / 10
+    return (this.y > ctx.canvas.height - outOfBondMarginY && this.y < ctx.canvas.height )
+  }
+  
+  
+  setNewAngle(){
+    let outOfBondMarginX = ctx.canvas.width / 10
+    let outOfBondMarginY = ctx.canvas.width / 10
+
+    if (this.isInLeftMargin() && this.isInTopMargin() ){
+      this.vAngle = Math.random()*Math.PI/2
+    }
+    if (this.isInLeftMargin() && this.isInBottomMargin() ){
+      this.vAngle = Math.random()*Math.PI/2
+    }
+    if (this.y < 0){
+      this.y = ctx.canvas.height
+      this.resetX()
+    }
+    if (this.y > ctx.canvas.height){
+      this.y = 0
+      this.resetX()
+    } 
+  }
+
   setStayPutState(){
     this.isChangingZone = false
     clearTimeout(this.changeZoneTimeout)
-    setTimeout(() => this.setChangeZoneState(),500+Math.random()*500)
+    this.setStayPutStateTimeout = setTimeout(() => this.setChangeZoneState(),500+Math.random()*500)
   }
 
   stop(){
     this.velocity = 0
+    clearTimeout(this.changeZoneTimeout)
+    clearTimeout(this.setStayPutStateTimeout)
   }
 
   draw(){
@@ -103,11 +202,11 @@ class Snitch {
 
   resetX(){
     this.x = ctx.canvas.width*2/10 +  Math.random()*(ctx.canvas.width*6/10)
-    this.width = this.initWidth
+    //this.width = this.initWidth
   }
   resetY(){
     this.y = ctx.canvas.height*2/10 + Math.random()*(ctx.canvas.height*6/10)
-    this.height = this.initHeight
+    //this.height = this.initHeight
   }
 
   reset(){
@@ -120,6 +219,7 @@ class Snitch {
     return (this.x < 0 || this.x > ctx.canvas.width || this.y < 0 || this.y > ctx.canvas.height)
   }
 
+  // This method should be removed as it makes the sound effect bad
   reappearInCanvas(){
     if (this.x < 0){
       this.x = ctx.canvas.width
@@ -140,7 +240,7 @@ class Snitch {
   }
 
   stayPut(){
-    snitch.vAngle += (2*Math.PI)*this.rotationPerSec/game.fps
+    snitch.vAngle += (2*Math.PI)*this.rotationPerSec/fps
     snitch.x = snitch.x + Math.cos(snitch.vAngle)*this.rotationRadius
     snitch.y = snitch.y + Math.sin(snitch.vAngle)*this.rotationRadius
   }
@@ -160,16 +260,28 @@ class Snitch {
       this.goStraight()
     }
     else{
-      this.stayPut()
+      this.stayPut( )
+    }
+    if (this.isPlaying){this.updateVolume()}
+  }
+
+  updateVolume(){
+    if (this.x > 0 && this.x < ctx.canvas.width/2){
+      this.flutterLeft.volume = (ctx.canvas.width/2 - this.x)/(ctx.canvas.width/2)
+    } else {
+      this.flutterLeft.volume = 0
+    }
+    if (this.x >= ctx.canvas.width/2 && this.x < ctx.canvas.width){
+      this.flutterRigth.volume = (this.x - ctx.canvas.width/2)/(ctx.canvas.width/2)
+    } else {
+      this.flutterRigth.volume = 0
     }
   }
 
   moveZ() {
-      this.Z += (this.nextZ - this.previousZ) / (game.fps * (this.transitionDuration / 1000))
+      this.Z += (this.nextZ - this.previousZ) / (fps * (this.transitionDuration / 1000))
       this.width = this.initWidth * this.Z 
       this.height = this.initHeight * this.Z
-      console.log(" next Z :" , this.nextZ)
-      console.log("  Z :" , this.Z)
     return 
   }
 
@@ -184,8 +296,6 @@ class Snitch {
       return false
     }
   }
-
-
 
 }
 
@@ -227,7 +337,10 @@ function updateScore(){
 function endGame(){
   game.stop()
   snitch.stop()
+  snitch.stopFlutter()
   document.querySelector(".start-btn").textContent = "START"
+  introAudio.currentTime = 0
+  introAudio.play()
 }
 
 function refresh(){
@@ -243,9 +356,28 @@ function refresh(){
   drawAll()
 }
 
+function refreshManualMode(){
+  clearAll()
+  snitch.move()
+  drawAll()
+}
+
+// For testing and debugging
+function launchManualMode(rps, radius){
+  snitch = new Snitch()
+  snitch.x = 200
+  snitch.y = 300
+  snitch.rotationPerSec = rps
+  snitch.rotationRadius = 3
+  setInterval(refreshManualMode, (1 / this.fps) * 1000 )
+}
+
+
 function launchGame(event){
   if (event.target.textContent === "START"){
+    introAudio.pause()
     snitch = new Snitch()
+    snitch.playFlutter()
     snitch.setStayPutState()
     game = new Game()
     game.start()
@@ -258,11 +390,18 @@ function tryToCatch(event){
   const clickX = event.clientX - rect.left
   const clickY = event.clientY - rect.top
 
-  if (snitch.isCaught(clickX,clickY)){
-    game.score++
-    snitch.reset()
+  if (game.isOn){
+    if (snitch.isCaught(clickX,clickY)){
+      game.score++
+      winAudio.play()
+      winAudio.currentTime = 0
+      snitch.reset()
+    }
+    else {
+      missAudio.play()
+      missAudio.currentTime = 0
+    }
   }
-  
 }
 
 
