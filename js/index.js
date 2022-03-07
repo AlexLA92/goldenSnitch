@@ -13,7 +13,8 @@ let sizeCoefficient = 0.03
 
 let fps = 100
 
-let introAudio = new Audio('../styles/sound/theme-song.mp3');
+//let introAudio = new Audio('../styles/sound/theme-song.mp3');
+let introAudio = new Audio();
 introAudio.play()
 
 
@@ -71,11 +72,11 @@ class Snitch {
     this.initWidth = snitchImg.width * sizeCoefficient
     this.initHeight = snitchImg.height * sizeCoefficient
     this.Z = 1
-    this.Zvariance =2
+    this.Zvariance = 1
     this.previousZ = 1
     this.nextZ = 1
 
-    this.velocity = 15
+    this.velocity = 12
     this.transitionDuration = 0
 
     this.vAngle = 0 
@@ -136,52 +137,94 @@ class Snitch {
   setChangeZoneState(){
     this.isChangingZone = true
 
-    this.transitionDuration = 150+Math.random()*250
+    this.transitionDuration = 100+Math.random()*200
     this.previousZ = this.nextZ
     this.Z = this.previousZ
-    this.nextZ = 0.0 + Math.random()*this.Zvariance 
-
+    this.nextZ = 0.0 + Math.random()*this.Zvariance
+    this.flutterStereo.volume =  this.nextZ/this.Zvariance
     this.changeZoneTimeout = setTimeout(() => this.setStayPutState(),this.transitionDuration)
   }
   
-  isInBottomLeftCornerMargin(marginX, marginY){
-    return (this.x > 0 && this.x < marginX && this.y > ctx.canvas.height / 2 && this.y < ctx.canvas.height) || (this.x > 0 && this.x < marginX && this.y > ctx.canvas.height / 2 && this.y < ctx.canvas.height) 
+  isInLeftSide(margin){
+    if (margin){
+      return this.x > 0 && this.x < margin
+    }
+    else {
+      return this.x > 0 && this.x < ctx.canvas.width / 2
+    }
   }
 
-  isInRightMargin(){
-    let outOfBondMarginX = ctx.canvas.width / 10
-    return (this.x > ctx.canvas.width - outOfBondMarginX && this.x < ctx.canvas.width )
+  isInRightSide(margin){
+    if (margin){
+      return this.x >= ctx.canvas.width - margin && this.x < ctx.canvas.width
+    }
+    else {
+      return this.x >= ctx.canvas.width / 2 && this.x < ctx.canvas.width
+    }
+  }
+
+  isInBottomSide (margin){
+    if (margin){
+      return this.y >= ctx.canvas.height - margin && this.y < ctx.canvas.height
+    }
+    else {
+      return this.y >= ctx.canvas.height / 2 && this.y < ctx.canvas.height
+    }
+  }
+
+  isInTopSide (margin){
+    if (margin){
+      return this.y > 0 && this.y < margin
+    }
+    else {
+      return this.y > 0 && this.y < ctx.canvas.height / 2
+    }
+  }
+
+  isInBottomLeftCornerMargin(marginX, marginY){
+    let result = this.isInLeftSide(marginX) && this.isInBottomSide()
+    result = result || (this.isInLeftSide() && this.isInBottomSide(marginY))
+    return  result
+  }
+
+  isInBottomRightCornerMargin(marginX, marginY){
+    let result = this.isInRightSide(marginX) && this.isInBottomSide()
+    result = result || (this.isInRightSide() && this.isInBottomSide(marginY))
+    return  result
   }
   
-  isInTopMargin(){
-    let outOfBondMarginY = ctx.canvas.height / 10
-    return (this.y > 0 && this.y < outOfBondMarginY )
+  isInTopRightCornerMargin(marginX, marginY){
+    let result = this.isInRightSide(marginX) && this.isInTopSide()
+    result = result || (this.isInRightSide() && this.isInTopSide(marginY))
+    return  result
   }
   
-  isInBottomMargin(){
-    let outOfBondMarginY = ctx.canvas.height / 10
-    return (this.y > ctx.canvas.height - outOfBondMarginY && this.y < ctx.canvas.height )
+  isInTopLeftCornerMargin(marginX, marginY){
+    let result = this.isInLeftSide(marginX) && this.isInTopSide()
+    result = result || (this.isInLeftSide() && this.isInTopSide(marginY))
+    return  result
   }
-  
   
   setNewAngle(){
     let outOfBondMarginX = ctx.canvas.width / 10
-    let outOfBondMarginY = ctx.canvas.width / 10
+    let outOfBondMarginY = ctx.canvas.height / 10
 
-    if (this.isInLeftMargin() && this.isInTopMargin() ){
+    if (this.isInBottomLeftCornerMargin(outOfBondMarginX, outOfBondMarginY)){
+      this.vAngle = 3*Math.PI/2 + Math.random()*Math.PI/2
+      console.log('isInBottomLeftCornerMargin', this.vAngle)
+    }
+    if (this.isInBottomRightCornerMargin(outOfBondMarginX, outOfBondMarginY)){
+      this.vAngle = Math.PI + Math.random()*Math.PI/2
+      console.log('isInBottomRightCornerMargin', this.vAngle)
+    }
+    if (this.isInTopRightCornerMargin(outOfBondMarginX, outOfBondMarginY)){
+      this.vAngle = Math.PI/2 + Math.random()*Math.PI/2
+      console.log('isInTopRightCornerMargin', this.vAngle)
+    }
+    if (this.isInTopLeftCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.random()*Math.PI/2
+      console.log('isInTopLeftCornerMargin', this.vAngle)
     }
-    if (this.isInLeftMargin() && this.isInBottomMargin() ){
-      this.vAngle = Math.random()*Math.PI/2
-    }
-    if (this.y < 0){
-      this.y = ctx.canvas.height
-      this.resetX()
-    }
-    if (this.y > ctx.canvas.height){
-      this.y = 0
-      this.resetX()
-    } 
   }
 
   setStayPutState(){
@@ -256,7 +299,10 @@ class Snitch {
     if (this.isOutOfCanvas()){
       this.reappearInCanvas()
     }
+
     if (this.isChangingZone === true){
+      // Set a new Angle in case Snitch is close to border
+      this.setNewAngle()
       this.goStraight()
     }
     else{
