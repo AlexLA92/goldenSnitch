@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "harry-potter";
+    src: url("./font/harry_p/HARRYP__.TTF");
+  }
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -10,6 +15,17 @@ body {
     height:100vh;
 }
 
+.title-container {
+    position: absolute;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.title-container img{
+    width: 15rem;
+    animation: float 4s ease-in-out infinite;
+}
 
 .game-container{
     background-image: url("./images/pit.jpeg");
@@ -18,26 +34,116 @@ body {
     background-position:center;
     flex-grow : 1;
     border: 1px solid black;
+    position: relative;
 }
 
 
 .information-container{
-    margin: 3vh;
+    padding-top: 3rem;
+    padding-bottom : 3rem;
     height: 3rem;
     display:flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    background-color: #890000;
+    border: thick groove #ffa700;
 }
 
 
 .chronometer-container{
-    font-size: 2rem;
+    position: relative;
+    width: 3rem;
+    height: 3rem;
 }
+
+.time-container{
+    font-size: 3rem;
+    font-family: "harry-potter";
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top:-1.5rem;
+    width: 6rem;
+    height: 6rem;
+    border: thick groove #ffa700;
+    border-radius: 3rem;
+    background-color: #ffa700;
+}
+
 
 .start-btn{
     width : 150px;
     text-align: center;
+    font-family: "harry-potter";
+    height: 4rem;
     font-size: 2rem;
-    border: 1px solid black;
+    padding: 0.1rem;
+    border: thick groove #ffa700;
+    border-radius: 0.5rem;
+    background-color: #ffa700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.playercard-container {
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+}
+
+.playercard-container img {
+    position: absolute;
+    left: -3rem;
+    top:-1.5rem;
+    width: 6rem;
+    border: thick groove #ffa700;
+    border-radius: 3rem;
+}
+
+.result-container{
+    position: absolute;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 15rem;
+    height: 15rem;
+    border: thick groove #ffa700;
+    border-radius: 0.5rem;
+    background-color: #ffa700;
+    display: flex;
+    flex-direction: column;
+    justify-content:center ;
+    align-items: center;
+    text-align: center;
+    font-family: "harry-potter";
+    font-size: 2rem;
+}
+
+.result-container h1{
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.result-container span{
+    font-size: 3rem;
+}
+
+.result-container img {
+    width: 4rem;
+}
+
+@keyframes float {
+	0% {
+		transform: translatey(0px);
+	}
+	50% {
+		transform: translatey(-20px);
+        width: 20rem;
+	}
+	100% {
+		transform: translatey(0px);
+	}
 }

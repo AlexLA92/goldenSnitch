@@ -14,11 +14,12 @@ let sizeCoefficient = 0.03
 let fps = 100
 
 let introAudio = new Audio('./styles/sound/theme-song.mp3');
-introAudio.play()
 
 
 let winAudio = new Audio('./styles/sound/win.mp3');
 let missAudio = new Audio('./styles/sound/miss.mp3');
+
+let intervalIntro = null
 
 
 
@@ -138,7 +139,6 @@ class Snitch {
 
     this.transitionDuration = 100+Math.random()*200
     this.previousZ = this.nextZ
-    this.Z = this.previousZ
     this.nextZ = 0.0 + Math.random()*this.Zvariance
     this.flutterStereo.volume =  this.nextZ/this.Zvariance
     this.changeZoneTimeout = setTimeout(() => this.setStayPutState(),this.transitionDuration)
@@ -210,19 +210,15 @@ class Snitch {
 
     if (this.isInBottomLeftCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = 3*Math.PI/2 + Math.random()*Math.PI/2
-      console.log('isInBottomLeftCornerMargin', this.vAngle)
     }
     if (this.isInBottomRightCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.PI + Math.random()*Math.PI/2
-      console.log('isInBottomRightCornerMargin', this.vAngle)
     }
     if (this.isInTopRightCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.PI/2 + Math.random()*Math.PI/2
-      console.log('isInTopRightCornerMargin', this.vAngle)
     }
     if (this.isInTopLeftCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.random()*Math.PI/2
-      console.log('isInTopLeftCornerMargin', this.vAngle)
     }
   }
 
@@ -282,19 +278,19 @@ class Snitch {
   }
 
   stayPut(){
-    snitch.vAngle += (2*Math.PI)*this.rotationPerSec/fps
-    snitch.x = snitch.x + Math.cos(snitch.vAngle)*this.rotationRadius
-    snitch.y = snitch.y + Math.sin(snitch.vAngle)*this.rotationRadius
+    this.vAngle += (2*Math.PI)*this.rotationPerSec/fps
+    this.x = this.x + Math.cos(this.vAngle)*this.rotationRadius
+    this.y = this.y + Math.sin(this.vAngle)*this.rotationRadius
   }
 
-  goStraight(){
-    snitch.x = snitch.x + Math.cos(snitch.vAngle)*snitch.velocity;
-    snitch.y = snitch.y + Math.sin(snitch.vAngle)*snitch.velocity;
-    this.moveZ()
+  goStraight(angle, speed){
+    this.x = this.x + Math.cos(angle)*speed;
+    this.y = this.y + Math.sin(angle)*speed;
   }
 
 
-  move() {
+  move(speed) {
+    // DEPRECATED
     if (this.isOutOfCanvas()){
       this.reappearInCanvas()
     }
@@ -302,7 +298,8 @@ class Snitch {
     if (this.isChangingZone === true){
       // Set a new Angle in case Snitch is close to border
       this.setNewAngle()
-      this.goStraight()
+      this.goStraight(this.vAngle,speed)
+      this.moveZ()
     }
     else{
       this.stayPut( )
@@ -335,7 +332,7 @@ class Snitch {
     let y0 = this.y + this.height/2
     let radius = this.width/2
 
-    if (((clickX-x0)**2+(clickY-y0)**2) <= radius**2){
+    if (((clickX-x0)**2+(clickY-y0)**2) <= (radius*1.2)**2){
       return true
     } else {
       return false
@@ -364,13 +361,9 @@ function clearAll() {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 }
 
-function drawAll() {
-  snitch.draw();
-}
-
 
 function updateTimer(){
-  document.querySelector(".chronometer-container").textContent = game.getSeconds()
+  document.querySelector(".time-container").textContent = game.getSeconds()
 }
 
 function updateScore(){
@@ -383,28 +376,25 @@ function endGame(){
   game.stop()
   snitch.stop()
   snitch.stopFlutter()
-  document.querySelector(".start-btn").textContent = "START"
+  document.querySelector(".start-btn").textContent = "TRY AGAIN"
+  
+  launchIntro()
   introAudio.currentTime = 0
   introAudio.play()
+
+  addTitle()
+  addScorecard()
 }
 
 function refresh(){
   clearAll()
   updateScore()
   updateTimer()
-  snitch.move()
-  //snitch.moveZ()
+  snitch.move(snitch.velocity)
   if (game.isElapsedTime()){
     endGame()
   }
-
-  drawAll()
-}
-
-function refreshManualMode(){
-  clearAll()
-  snitch.move()
-  drawAll()
+  snitch.draw()
 }
 
 // For testing and debugging
@@ -418,9 +408,45 @@ function launchManualMode(rps, radius){
 }
 
 
+function removeTitle(){
+  let titleElement = document.querySelector(".title-container")
+  titleElement.remove()
+}
+
+function addTitle(){
+  let gameElement = document.querySelector(".game-container")
+  let templateElement = document.querySelector("#title-template") 
+  let templateContent = document.importNode(templateElement.content, true);
+  gameElement.insertBefore(templateContent, gameElement.firstChild);
+}
+
+function addScorecard(){
+  let gameElement = document.querySelector(".game-container")
+  let templateElement = document.querySelector("#result-template") 
+  let templateContent = document.importNode(templateElement.content, true);
+
+  let score = templateContent.querySelector("span")
+  score.textContent = game.score
+
+  gameElement.appendChild(templateContent);
+
+}
+
+function removeScorecard(){
+  if (document.querySelector(".result-container")){
+    titleElement = document.querySelector(".result-container")
+    titleElement.remove()
+  }  
+}
+
 function launchGame(event){
-  if (event.target.textContent === "START"){
+  if ((typeof variable === 'undefined') || !game.isOn){
+    
+    removeTitle()
+    removeScorecard()
+    
     introAudio.pause()
+    clearInterval(intervalIntro)
     snitch = new Snitch()
     snitch.playFlutter()
     snitch.setStayPutState()
@@ -436,7 +462,9 @@ function tryToCatch(event){
   const clickY = event.clientY - rect.top
 
   if (game.isOn){
+    console.log("tryToCatch", clickX ,clickY)
     if (snitch.isCaught(clickX,clickY)){
+      console.log("GOT IT")
       game.score++
       winAudio.play()
       winAudio.currentTime = 0
@@ -449,6 +477,30 @@ function tryToCatch(event){
   }
 }
 
+function launchIntro(){
+  //introAudio.play()
+  
+  introSnitch = new Snitch()
+  console.log(introSnitch.width)
+  console.log(introSnitch.height)
+  console.log(introSnitch.x)
+  console.log(introSnitch.y)
+  introSnitch.x = ctx.canvas.width / 2 - introSnitch.width/2
+  introSnitch.y = ctx.canvas.height / 2 - introSnitch.height/2
+  introSnitch.setChangeZoneState()
+
+  intervalIntro = setInterval(refreshIntro, (1 / this.fps) * 1000)
+}
+
+function refreshIntro(){
+  clearAll()
+  //introSnitch.move(introSnitch.velocity)
+  introSnitch.stayPut()
+  //introSnitch.setNewAngle()
+  //introSnitch.goStraight(0,1)
+  introSnitch.draw()
+}
+
 
 /* ------- LISTENERS ------- */
 
@@ -459,6 +511,8 @@ canvasElement.addEventListener('mousedown', function(event) {
 })
 
 /* ------- INIT ------- */
+
+launchIntro()
 
 
 

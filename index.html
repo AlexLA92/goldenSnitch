@@ -11,16 +11,38 @@
     <head>
     </head>
     <section class = "game-container">
+        <div class="title-container">
+            <img src="./styles/images/title.png" alt="title">
+        </div>
         <canvas id="canvas" width="300" height="300"></canvas>
     </section>
     <section class = "information-container">
-        <div class = "chronometer-container">30</div>
-        <div class = "score-container">
-            <div class = "start-btn">START</div>
+        <div class = "chronometer-container">
+            <div class = "time-container">
+            <p>10</p>
+            </div>
         </div>
-        <div class = "playercard-container">PLAYER</div>
+        <div class = "score-container">
+            <div class = "start-btn">PLAY</div>
+        </div>
+        <div class = "playercard-container">
+            <img src="./styles/images/harry.png" alt="harry">
+        </div>
     </section>
     <script src="js/data.js"></script>
     <script src="js/index.js"></script>
+
+    <template id="title-template">
+        <div class="title-container">
+            <img src="./styles/images/title.png" alt="title">
+        </div>
+      </template>
+
+    <template id="result-template">
+        <div class="result-container">
+            <h1>Well done young wizard !</h1>
+            <p>You caught </br> <span>54</span>x <img src="./styles/images/golden_snitch.png" alt="little-snitch"> </p>
+        </div>
+    </template>
 </body>
 </html>
