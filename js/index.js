@@ -3,6 +3,7 @@
 const startButton = document.querySelector(".start-btn")
 //const ctx = getAdjustedCanvas()
 const canvasElement = document.querySelector("canvas#canvas")
+const titleElement = document.querySelector(".title-container img")
 const ctx = document.querySelector("canvas#canvas").getContext('2d')
 ctx.canvas.width  = canvasElement.parentNode.offsetWidth
 ctx.canvas.height = canvasElement.parentNode.offsetHeight
@@ -11,7 +12,7 @@ let snitchImg = new Image()
 snitchImg.src = './styles/images/golden_snitch.png'
 let sizeCoefficient = 0.03
 
-let fps = 100
+let fps = 50
 
 let introAudio = new Audio('./styles/sound/theme-song.mp3');
 
@@ -21,6 +22,7 @@ let missAudio = new Audio('./styles/sound/miss.mp3');
 
 let intervalIntro = null
 
+let highestScore = 0
 
 
 
@@ -36,7 +38,7 @@ class Game {
 
   start() {
     this.clockIntervalId = setInterval( () => this.time--,1000)
-    this.gameIntervalID = setInterval(refresh, (1 / this.fps) * 1000 )
+    this.gameIntervalID = setInterval(refresh, (1 / fps) * 1000 )
     this.isOn=true
     }
 
@@ -71,14 +73,17 @@ class Snitch {
     this.height = snitchImg.height * sizeCoefficient
     this.initWidth = snitchImg.width * sizeCoefficient
     this.initHeight = snitchImg.height * sizeCoefficient
+
     this.Z = 1
-    this.Zvariance = 1
+    this.minZ = 0.2
+    this.Zvariance = 1.3
     this.previousZ = 1
     this.nextZ = 1
 
-    this.velocity = 12
+    this.velocity = 30
     this.transitionDuration = 0
 
+    this.vAngleInit = 0 
     this.vAngle = 0 
     this.rotationPerSec = 15
     this.rotationRadius = 5
@@ -88,7 +93,8 @@ class Snitch {
     this.setStayPutStateTimeout = null
 
     this.isPlaying = false
-    this.flutterStereo = new Audio('./styles/sound/flutter-stereo.wav');
+    this.flutterStereo = new Audio('./styles/sound/flutter-stereo.wav')
+
     // The timeupdate trick is to avoid gaps when looping on the audio file. Found it on stackoverflow topic #7330023
     this.flutterStereo.addEventListener('timeupdate', function(){
         var buffer = .44
@@ -97,8 +103,8 @@ class Snitch {
             this.play()
         }
     });
-    this.flutterRigth = new Audio('./styles/sound/flutter-right.wav')
-    this.flutterRigth.addEventListener('timeupdate', function(){
+    this.flutterRight = new Audio('./styles/sound/flutter-right.wav')
+    this.flutterRight.addEventListener('timeupdate', function(){
       var buffer = .44
       if(this.currentTime > this.duration - buffer){
           this.currentTime = 0
@@ -118,17 +124,17 @@ class Snitch {
 
   playFlutter(){
     this.flutterStereo.play()
-    this.flutterStereo.volume = 0.5
-    this.flutterRigth.play()
-    this.flutterRigth.volume = 0
+    this.flutterStereo.volume = 0
+    this.flutterRight.play()
+    this.flutterRight.volume = 0.5
     this.flutterLeft.play()
-    this.flutterLeft.volume = 0
+    this.flutterLeft.volume = 0.5
     this.isPlaying = true
   }
 
   stopFlutter(){
     this.flutterStereo.pause() 
-    this.flutterRigth.pause()
+    this.flutterRight.pause()
     this.flutterLeft.pause()
     this.isPlaying = false
   }
@@ -138,10 +144,18 @@ class Snitch {
     this.isChangingZone = true
 
     this.transitionDuration = 100+Math.random()*200
+    
     this.previousZ = this.nextZ
-    this.nextZ = 0.0 + Math.random()*this.Zvariance
-    this.flutterStereo.volume =  this.nextZ/this.Zvariance
+    this.nextZ =  this.minZ + Math.random()*this.Zvariance
+
     this.changeZoneTimeout = setTimeout(() => this.setStayPutState(),this.transitionDuration)
+  }
+
+  setStayPutState(){
+    this.isChangingZone = false
+    clearTimeout(this.changeZoneTimeout)
+
+    this.setStayPutStateTimeout = setTimeout(() => this.setChangeZoneState(),500+Math.random()*500)
   }
   
   isInLeftSide(margin){
@@ -155,7 +169,7 @@ class Snitch {
 
   isInRightSide(margin){
     if (margin){
-      return this.x >= ctx.canvas.width - margin && this.x < ctx.canvas.width
+      return (this.x >= ctx.canvas.width - margin) && this.x < ctx.canvas.width
     }
     else {
       return this.x >= ctx.canvas.width / 2 && this.x < ctx.canvas.width
@@ -222,11 +236,7 @@ class Snitch {
     }
   }
 
-  setStayPutState(){
-    this.isChangingZone = false
-    clearTimeout(this.changeZoneTimeout)
-    this.setStayPutStateTimeout = setTimeout(() => this.setChangeZoneState(),500+Math.random()*500)
-  }
+  
 
   stop(){
     this.velocity = 0
@@ -288,44 +298,82 @@ class Snitch {
     this.y = this.y + Math.sin(angle)*speed;
   }
 
-
-  move(speed) {
-    // DEPRECATED
-    if (this.isOutOfCanvas()){
-      this.reappearInCanvas()
+  moveBackAndForth(speed){
+    if ((this.isChangingZone === true) && (this.vAngleInit%(2*Math.PI)===0)){
+      console.log("moving until rigth border")
+      this.moveUntilBorder('right',0,speed)
     }
+    if ((this.isChangingZone === true) && (this.vAngleInit%(2*Math.PI)===Math.PI)){
+      console.log("moving until left border")
+      this.moveUntilBorder('left',Math.PI,speed)
+    }
+    else {
+      this.stayPut()
+    }
+  }
+
+  moveUntilBorder(borderSide,vAngle,speed){
+    let outOfBondMarginX = ctx.canvas.width / 8
+    this.goStraight(vAngle, speed)
+    this.moveZ()
+    switch (borderSide){
+      case 'right':
+        if((this.isInRightSide(outOfBondMarginX+this.width/2)) ||  this.x > ctx.canvas.width){
+          console.log("ARRIVED AT RIGHT SIDE")
+          this.isChangingZone= false
+          setTimeout( () => {
+            console.log("LET'S GO LEFT")
+            this.isChangingZone= true
+            this.vAngleInit += Math.PI
+            this.previousZ = this.nextZ
+            this.nextZ =  this.minZ + Math.random()*this.Zvariance
+          }, 5000
+          )}
+        break
+      case 'left':
+        if(this.isInLeftSide(outOfBondMarginX-this.width/2)||  this.x < 0){
+          console.log("ARRIVED AT LEFT SIDE")
+          this.isChangingZone= false
+          setTimeout( () => {
+            console.log("LET'S GO RIGHT")
+            this.isChangingZone= true
+            this.vAngleInit += Math.PI
+            this.previousZ = this.nextZ
+            this.nextZ =  this.minZ + Math.random()*this.Zvariance}, 5000
+          )}
+        break
+    }
+    
+  }
+
+  moveRandomly(speed) {
 
     if (this.isChangingZone === true){
       // Set a new Angle in case Snitch is close to border
       this.setNewAngle()
-      this.goStraight(this.vAngle,speed)
+
+      this.goStraight(this.vAngle, speed)
       this.moveZ()
     }
     else{
-      this.stayPut( )
-    }
-    if (this.isPlaying){this.updateVolume()}
-  }
-
-  updateVolume(){
-    if (this.x > 0 && this.x < ctx.canvas.width/2){
-      this.flutterLeft.volume = (ctx.canvas.width/2 - this.x)/(ctx.canvas.width/2)
-    } else {
-      this.flutterLeft.volume = 0
-    }
-    if (this.x >= ctx.canvas.width/2 && this.x < ctx.canvas.width){
-      this.flutterRigth.volume = (this.x - ctx.canvas.width/2)/(ctx.canvas.width/2)
-    } else {
-      this.flutterRigth.volume = 0
+      this.stayPut()
     }
   }
 
   moveZ() {
-      this.Z += (this.nextZ - this.previousZ) / (fps * (this.transitionDuration / 1000))
-      this.width = this.initWidth * this.Z 
-      this.height = this.initHeight * this.Z
-    return 
+    this.Z += (this.nextZ - this.previousZ) / (fps * (this.transitionDuration / 1000))
+    this.width = this.initWidth * this.Z 
+    this.height = this.initHeight * this.Z
+  return 
+}
+
+  updateVolume(){
+
+    this.flutterLeft.volume = Math.max(0,Math.min(1,(ctx.canvas.width - this.x)/(ctx.canvas.width)*(this.Z/(this.minZ + this.Zvariance))))
+    this.flutterRight.volume =  Math.max(0,Math.min(1,this.x/ctx.canvas.width*(this.Z/(this.minZ + this.Zvariance))))
   }
+
+
 
   isCaught(clickX,clickY){
     let x0 = this.x + this.width/2
@@ -372,6 +420,12 @@ function updateScore(){
   }
 }
 
+function updateHighestScore(){
+    if(game.score > highestScore){
+      document.querySelector(".highscore-container span").textContent = game.score
+    }
+}
+
 function endGame(){
   game.stop()
   snitch.stop()
@@ -382,6 +436,8 @@ function endGame(){
   introAudio.currentTime = 0
   introAudio.play()
 
+  updateHighestScore()
+
   addTitle()
   addScorecard()
 }
@@ -390,10 +446,11 @@ function refresh(){
   clearAll()
   updateScore()
   updateTimer()
-  snitch.move(snitch.velocity)
+  snitch.moveRandomly(snitch.velocity)
   if (game.isElapsedTime()){
     endGame()
   }
+  if (snitch.isPlaying){snitch.updateVolume()}
   snitch.draw()
 }
 
@@ -404,7 +461,7 @@ function launchManualMode(rps, radius){
   snitch.y = 300
   snitch.rotationPerSec = rps
   snitch.rotationRadius = 3
-  setInterval(refreshManualMode, (1 / this.fps) * 1000 )
+  setInterval(refreshManualMode, (1 / fps) * 1000 )
 }
 
 
@@ -434,7 +491,7 @@ function addScorecard(){
 
 function removeScorecard(){
   if (document.querySelector(".result-container")){
-    titleElement = document.querySelector(".result-container")
+    let titleElement = document.querySelector(".result-container")
     titleElement.remove()
   }  
 }
@@ -462,9 +519,7 @@ function tryToCatch(event){
   const clickY = event.clientY - rect.top
 
   if (game.isOn){
-    console.log("tryToCatch", clickX ,clickY)
     if (snitch.isCaught(clickX,clickY)){
-      console.log("GOT IT")
       game.score++
       winAudio.play()
       winAudio.currentTime = 0
@@ -478,27 +533,31 @@ function tryToCatch(event){
 }
 
 function launchIntro(){
-  //introAudio.play()
-  
+  introAudio.play()
   introSnitch = new Snitch()
-  console.log(introSnitch.width)
-  console.log(introSnitch.height)
-  console.log(introSnitch.x)
-  console.log(introSnitch.y)
-  introSnitch.x = ctx.canvas.width / 2 - introSnitch.width/2
-  introSnitch.y = ctx.canvas.height / 2 - introSnitch.height/2
-  introSnitch.setChangeZoneState()
+  introSnitch.velocity = 50
+  introSnitch.vAngle = 0
+  introSnitch.Zvariance = 4
+  introSnitch.transitionDuration = 500
+  introSnitch.isChangingZone= true
+  introSnitch.playFlutter()
+  introSnitch.x = ctx.canvas.width / 10 - introSnitch.width/2
+  introSnitch.y = ctx.canvas.height * 8 /10  - introSnitch.height/2
 
-  intervalIntro = setInterval(refreshIntro, (1 / this.fps) * 1000)
+  intervalIntro = setInterval(refreshIntro, (1 / fps) * 1000)
+
 }
 
 function refreshIntro(){
   clearAll()
-  //introSnitch.move(introSnitch.velocity)
-  introSnitch.stayPut()
-  //introSnitch.setNewAngle()
-  //introSnitch.goStraight(0,1)
+  introSnitch.moveBackAndForth(introSnitch.velocity)
+  if (introSnitch.isPlaying){introSnitch.updateVolume()}
   introSnitch.draw()
+}
+
+function launchSound(){
+  introAudio.play()
+  introSnitch.playFlutter()
 }
 
 
@@ -509,6 +568,8 @@ startButton.addEventListener('click',launchGame)
 canvasElement.addEventListener('mousedown', function(event) {
   tryToCatch(event)
 })
+
+titleElement.addEventListener('click',launchSound)
 
 /* ------- INIT ------- */
 

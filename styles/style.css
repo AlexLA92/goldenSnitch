@@ -88,16 +88,19 @@ body {
     justify-content: center;
 }
 
-.playercard-container {
+.playerinfo-container {
     position: relative;
-    width: 3rem;
-    height: 3rem;
+    display: flex;
+    flex-direction: row;
+    height: 6rem;
+}
+
+.playercard-container {
+    width: 6rem;
+    height: 6rem;
 }
 
 .playercard-container img {
-    position: absolute;
-    left: -3rem;
-    top:-1.5rem;
     width: 6rem;
     border: thick groove #ffa700;
     border-radius: 3rem;
@@ -133,6 +136,33 @@ body {
 
 .result-container img {
     width: 4rem;
+}
+
+.highscore-container{
+    margin: 1rem;
+    text-align: center;
+    font-family: "harry-potter";
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
+    z-index: 1;
+}
+
+.highscore-container span{
+    font-size: 3rem;
+}
+
+.highscore-container p{
+    font-size: 3rem;
+}
+
+.highscore-container img {
+    width: 4rem;
+}
+
+
+.highscore-container h1{
+    font-size: 2rem;
 }
 
 @keyframes float {
