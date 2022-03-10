@@ -197,7 +197,7 @@ class Snitch {
     this.Z = this.nextZ // allows to catchup if nextZ was not exactly reached with interpolation
     this.updateSize()
     clearTimeout(this.goStraightTimeout)
-    this.activateStayPutTimeout = setTimeout(() => this.activateGoStraight(),200+Math.random()*500)
+    this.activateStayPutTimeout = setTimeout(() => this.activateGoStraight(),500+Math.random()*500)
   }
 
   stop(){
@@ -360,7 +360,6 @@ class Snitch {
     }
     
   }
-
 
   // Perpective
   defineNewZ(){
@@ -566,7 +565,7 @@ function launchGame(event){
                         ctx.canvas.height/2,         // y coordinate
                         snitchImg.width *sizeCoefficient, // width coordinate
                         snitchImg.height *sizeCoefficient,  // height coordinate
-                        50,           // Velocity level
+                        35,           // Velocity level
                         0,            // Velocity vector angle
                         true,         // Changing Zone state status 
                         100,    // Transition Duration
