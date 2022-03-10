@@ -224,3 +224,11 @@ body {
 .right-animation-container.animated img {
     animation: slidefromRight 4s ease-in-out ;
 }
+
+.sound-container img {
+    width: 3rem;
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    z-index: 1;
+}

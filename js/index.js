@@ -3,6 +3,8 @@
 const startButton = document.querySelector(".start-btn")
 const canvasElement = document.querySelector("canvas#canvas")
 const titleElement = document.querySelector(".title-container img")
+const soundControlerElement = document.querySelector(".sound-container img")
+
 const ctx = document.querySelector("canvas#canvas").getContext('2d')
 ctx.canvas.width  = canvasElement.parentNode.offsetWidth
 ctx.canvas.height = canvasElement.parentNode.offsetHeight
@@ -18,7 +20,11 @@ introAudio.volume = 0.4
 
 
 let winAudio = new Audio('./styles/sound/win.mp3');
+winAudio.volume = 1
 let missAudio = new Audio('./styles/sound/miss.mp3');
+missAudio.volume = 0.4
+
+let isMuted = false
 
 let intervalIntro = null
 
@@ -331,11 +337,11 @@ class Snitch {
   }
 
   moveBackAndForth(speed){
-    if ((this.isChangingZone === true) && ((this.vAngleInit%(2*Math.PI)).toFixed(2)==="0.00")){
+    if ((this.isChangingZone === true) && ((this.vAngleInit%(2*Math.PI)).toFixed(1)==="0.0")){
       console.log("moving until rigth border")
       this.moveUntilBorder('right',0,speed)
     }
-    else if ((this.isChangingZone === true) && ((this.vAngleInit%(2*Math.PI)).toFixed(2)===Math.PI.toFixed(2))){
+    else if ((this.isChangingZone === true) && ((this.vAngleInit%(2*Math.PI)).toFixed(1)===Math.PI.toFixed(1))){
       console.log("moving until left border")
       this.moveUntilBorder('left',Math.PI,speed)
     }
@@ -364,10 +370,8 @@ class Snitch {
         break
       case 'left':
         if(this.isInLeftSide(outOfBondMarginX)||  this.x < 0){
-          console.log("ARRIVED AT LEFT SIDE")
           this.isChangingZone= false
           setTimeout( () => {
-            console.log("LET'S GO RIGHT")
             this.isChangingZone= true
             this.vAngleInit += Math.PI
             this.previousZ = this.nextZ
@@ -508,7 +512,7 @@ function addScorecard(){
   score.textContent = game.score
 
   let message = templateContent.querySelector("h1")
-  if (game.score < 3){
+  if (game.score < 5){
     message.textContent = "If you were any slower, you'd be going backwards Potter."
   }
   else if (game.score < 10){
@@ -530,7 +534,7 @@ function removeScorecard(){
 }
 
 function launchGame(event){
-  if ((typeof variable === 'undefined') || !game.isOn){
+  if ((typeof game === 'undefined') || !game.isOn){
     
     removeTitle()
     removeScorecard()
@@ -593,6 +597,43 @@ function launchSound(){
   introSnitch.playFlutter()
 }
 
+function muteAll(){
+  if (!(typeof snitch === 'undefined')){
+    snitch.stopFlutter()
+  }
+  if (!(typeof introSnitch === 'undefined')){
+    introSnitch.stopFlutter()
+  }
+  introAudio.volume = 0
+  winAudio.volume = 0
+  missAudio.volume = 0
+}
+
+function unmuteAll(){
+  if (!(typeof snitch === 'undefined')){
+    snitch.playFlutter()
+  }
+  if (!(typeof introSnitch === 'undefined')){
+    introSnitch.playFlutter()
+  }
+  introAudio.volume = 0.4
+  winAudio.volume = 1
+  missAudio.volume = 0.4
+}
+
+function mute(event){
+  
+  if (isMuted === false){
+    event.target.src = './styles/images/mute-icon.png'
+    isMuted= true
+    muteAll()
+  }
+  else {
+    event.target.src = './styles/images/sound-icon.png'
+    isMuted= false
+    unmuteAll()
+  }
+}
 
 /* ------- LISTENERS ------- */
 
@@ -603,6 +644,10 @@ canvasElement.addEventListener('mousedown', function(event) {
 })
 
 titleElement.addEventListener('click',launchSound)
+
+soundControlerElement.addEventListener('click',function(event) {
+  mute(event)
+})
 
 /* ------- INIT ------- */
 
