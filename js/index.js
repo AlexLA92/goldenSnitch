@@ -1,7 +1,6 @@
 /* ------- GLOBAL VARIABLES ------- */
 
 const startButton = document.querySelector(".start-btn")
-//const ctx = getAdjustedCanvas()
 const canvasElement = document.querySelector("canvas#canvas")
 const titleElement = document.querySelector(".title-container img")
 const ctx = document.querySelector("canvas#canvas").getContext('2d')
@@ -15,6 +14,7 @@ let sizeCoefficient = 0.03
 let fps = 50
 
 let introAudio = new Audio('./styles/sound/theme-song.mp3');
+introAudio.volume = 0.4
 
 
 let winAudio = new Audio('./styles/sound/win.mp3');
@@ -28,9 +28,10 @@ let highestScore = 0
 
 /* ------- CLASSES ------- */
 class Game {
-  constructor() {
+  constructor(duration) {
     this.score = 0
-    this.time = 10
+    this.duration = duration
+    this.time = duration
     this.clockIntervalId = null
     this.gameIntervalId = null
     this.isOn = false
@@ -38,19 +39,42 @@ class Game {
 
   start() {
     this.clockIntervalId = setInterval( () => this.time--,1000)
-    this.gameIntervalID = setInterval(refresh, (1 / fps) * 1000 )
+    setTimeout(() => this.bringHermany() , this.duration*1000*(1/3))
+    setTimeout(() => this.bringDraco() , this.duration*1000*(2/3))
+    this.gameIntervalID = setInterval(refreshGame, (1 / fps) * 1000 )
     this.isOn=true
     }
+  
+  
+  bringHermany(){
+    let characterElement  = document.querySelector(".left-animation-container")
+    characterElement.classList.add("animated")
+  }
+  bringDraco(){
+    let characterElement  = document.querySelector(".right-animation-container")
+    characterElement.classList.add("animated")
+  }
+  resetHermany(){
+    let characterElement  = document.querySelector(".left-animation-container")
+    characterElement.classList.remove("animated")
+  }
+  resetDraco(){
+    let characterElement  = document.querySelector(".right-animation-container")
+    characterElement.classList.remove("animated")
+  }
 
   stop() {
     clearInterval(this.clockIntervalId)
     clearInterval(this.gameIntervalID)
     this.isOn=false
+    this.resetHermany()
+    this.resetDraco()
   }
 
   getSeconds() {
     return this.time
   }
+
 
   isElapsedTime(){
     if (this.time <= 0){
@@ -143,7 +167,7 @@ class Snitch {
   setChangeZoneState(){
     this.isChangingZone = true
 
-    this.transitionDuration = 100+Math.random()*200
+    this.transitionDuration = 300+Math.random()*200
     
     this.previousZ = this.nextZ
     this.nextZ =  this.minZ + Math.random()*this.Zvariance
@@ -155,7 +179,7 @@ class Snitch {
     this.isChangingZone = false
     clearTimeout(this.changeZoneTimeout)
 
-    this.setStayPutStateTimeout = setTimeout(() => this.setChangeZoneState(),500+Math.random()*500)
+    this.setStayPutStateTimeout = setTimeout(() => this.setChangeZoneState(),200+Math.random()*500)
   }
   
   isInLeftSide(margin){
@@ -169,10 +193,10 @@ class Snitch {
 
   isInRightSide(margin){
     if (margin){
-      return (this.x >= ctx.canvas.width - margin) && this.x < ctx.canvas.width
+      return (this.x + this.width>= ctx.canvas.width - margin) && this.x < ctx.canvas.width
     }
     else {
-      return this.x >= ctx.canvas.width / 2 && this.x < ctx.canvas.width
+      return (this.x + this.width) >= ctx.canvas.width / 2 && this.x < ctx.canvas.width
     }
   }
 
@@ -224,15 +248,23 @@ class Snitch {
 
     if (this.isInBottomLeftCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = 3*Math.PI/2 + Math.random()*Math.PI/2
+      console.log("isInBottomLeftCornerMargin")
+      console.log(this.vAngle)
     }
     if (this.isInBottomRightCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.PI + Math.random()*Math.PI/2
+      console.log("isInBottomRightCornerMargin")
+      console.log(this.vAngle)
     }
     if (this.isInTopRightCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.PI/2 + Math.random()*Math.PI/2
+      console.log("isInTopRightCornerMargin")
+      console.log(this.vAngle)
     }
     if (this.isInTopLeftCornerMargin(outOfBondMarginX, outOfBondMarginY)){
       this.vAngle = Math.random()*Math.PI/2
+      console.log("isInTopLeftCornerMargin")
+      console.log(this.vAngle)
     }
   }
 
@@ -299,11 +331,11 @@ class Snitch {
   }
 
   moveBackAndForth(speed){
-    if ((this.isChangingZone === true) && (this.vAngleInit%(2*Math.PI)===0)){
+    if ((this.isChangingZone === true) && ((this.vAngleInit%(2*Math.PI)).toFixed(2)==="0.00")){
       console.log("moving until rigth border")
       this.moveUntilBorder('right',0,speed)
     }
-    if ((this.isChangingZone === true) && (this.vAngleInit%(2*Math.PI)===Math.PI)){
+    else if ((this.isChangingZone === true) && ((this.vAngleInit%(2*Math.PI)).toFixed(2)===Math.PI.toFixed(2))){
       console.log("moving until left border")
       this.moveUntilBorder('left',Math.PI,speed)
     }
@@ -313,12 +345,12 @@ class Snitch {
   }
 
   moveUntilBorder(borderSide,vAngle,speed){
-    let outOfBondMarginX = ctx.canvas.width / 8
+    let outOfBondMarginX = ctx.canvas.width *0.1
     this.goStraight(vAngle, speed)
     this.moveZ()
     switch (borderSide){
       case 'right':
-        if((this.isInRightSide(outOfBondMarginX+this.width/2)) ||  this.x > ctx.canvas.width){
+        if((this.isInRightSide(outOfBondMarginX)) ||  this.x > ctx.canvas.width){
           console.log("ARRIVED AT RIGHT SIDE")
           this.isChangingZone= false
           setTimeout( () => {
@@ -331,7 +363,7 @@ class Snitch {
           )}
         break
       case 'left':
-        if(this.isInLeftSide(outOfBondMarginX-this.width/2)||  this.x < 0){
+        if(this.isInLeftSide(outOfBondMarginX)||  this.x < 0){
           console.log("ARRIVED AT LEFT SIDE")
           this.isChangingZone= false
           setTimeout( () => {
@@ -368,9 +400,8 @@ class Snitch {
 }
 
   updateVolume(){
-
-    this.flutterLeft.volume = Math.max(0,Math.min(1,(ctx.canvas.width - this.x)/(ctx.canvas.width)*(this.Z/(this.minZ + this.Zvariance))))
-    this.flutterRight.volume =  Math.max(0,Math.min(1,this.x/ctx.canvas.width*(this.Z/(this.minZ + this.Zvariance))))
+    this.flutterLeft.volume = Math.max(0,Math.min(1,(ctx.canvas.width - this.x)/(ctx.canvas.width)*((this.Z-this.minZ)/(this.minZ + this.Zvariance))))
+    this.flutterRight.volume =  Math.max(0,Math.min(1,(this.x+this.width)/ctx.canvas.width*((this.Z-this.minZ)/(this.minZ + this.Zvariance))))
   }
 
 
@@ -442,7 +473,8 @@ function endGame(){
   addScorecard()
 }
 
-function refresh(){
+
+function refreshGame(){
   clearAll()
   updateScore()
   updateTimer()
@@ -452,16 +484,6 @@ function refresh(){
   }
   if (snitch.isPlaying){snitch.updateVolume()}
   snitch.draw()
-}
-
-// For testing and debugging
-function launchManualMode(rps, radius){
-  snitch = new Snitch()
-  snitch.x = 200
-  snitch.y = 300
-  snitch.rotationPerSec = rps
-  snitch.rotationRadius = 3
-  setInterval(refreshManualMode, (1 / fps) * 1000 )
 }
 
 
@@ -485,6 +507,17 @@ function addScorecard(){
   let score = templateContent.querySelector("span")
   score.textContent = game.score
 
+  let message = templateContent.querySelector("h1")
+  if (game.score < 3){
+    message.textContent = "If you were any slower, you'd be going backwards Potter."
+  }
+  else if (game.score < 10){
+    message.textContent = "Well done Potter ! Five points to Gryffondor !"
+  }
+  else {
+    message.textContent = "I think it's clear we can expect great things from you !"
+  }
+
   gameElement.appendChild(templateContent);
 
 }
@@ -507,7 +540,7 @@ function launchGame(event){
     snitch = new Snitch()
     snitch.playFlutter()
     snitch.setStayPutState()
-    game = new Game()
+    game = new Game(30)
     game.start()
   }
 }

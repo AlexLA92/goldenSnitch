@@ -53,8 +53,8 @@ body {
 
 .chronometer-container{
     position: relative;
-    width: 3rem;
-    height: 3rem;
+    width: 6rem;
+    height: 6rem;
 }
 
 .time-container{
@@ -64,7 +64,6 @@ body {
     justify-content: center;
     align-items: center;
     position: absolute;
-    top:-1.5rem;
     width: 6rem;
     height: 6rem;
     border: thick groove #ffa700;
@@ -126,7 +125,7 @@ body {
 }
 
 .result-container h1{
-    font-size: 3rem;
+    font-size: 2rem;
     margin-bottom: 1rem;
 }
 
@@ -176,4 +175,52 @@ body {
 	100% {
 		transform: translatey(0px);
 	}
+}
+
+@keyframes slidefromleft {
+	0% {
+		transform: translatex(0px);
+	}
+	50% {
+		transform: translatex(18rem);
+	}
+	100% {
+		transform: translatey(0px);
+	}
+}
+
+@keyframes slidefromRight {
+	0% {
+		transform: translatex(0px);
+	}
+	50% {
+		transform: translatex(-18rem);
+	}
+	100% {
+		transform: translatey(0px);
+	}
+}
+
+
+
+.left-animation-container img {
+    position: fixed;
+    top:50vh;
+    left:-20rem;
+    width: 20rem;
+}
+
+.left-animation-container.animated img {
+    animation: slidefromleft 4s ease-in-out ;
+}
+
+.right-animation-container img {
+    position: fixed;
+    top:30vh;
+    right:-20rem;
+    width: 20rem;
+}
+
+.right-animation-container.animated img {
+    animation: slidefromRight 4s ease-in-out ;
 }
