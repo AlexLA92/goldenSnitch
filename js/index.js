@@ -287,7 +287,6 @@ class Snitch {
 
   // Drawing
   draw(){
-    console.log(this.img, this.x, this.y, this.currentWidth,this.currentHeight)
     ctx.drawImage(this.img, this.x, this.y, this.currentWidth,this.currentHeight)
     }
   
@@ -337,7 +336,6 @@ class Snitch {
 
   moveUntilBorder(borderSide,angle,speed){
     let outOfBondMarginX = ctx.canvas.width *0.1
-    console.log('moveUntilBorder')
     this.goStraight(angle, speed)
     this.moveZ()
     switch (borderSide){
@@ -376,7 +374,6 @@ class Snitch {
   }
 
   moveZ() {
-    console.log('this.Z' , this.Z)
     this.Z += (this.nextZ - this.previousZ) / (fps * (this.transitionDuration / 1000))
     this.updateSize()
   return 
@@ -522,7 +519,9 @@ function addTitle(){
 
 function removeTitle(){
   let titleElement = document.querySelector(".title-container")
-  titleElement.remove()
+  if (titleElement){
+    titleElement.remove()
+  }
 }
 
 function addScorecard(){
@@ -619,7 +618,6 @@ function launchIntro(){
                             true,  // Changing Zone state status 
                             500,   // Transition Duration
                             4)     // Zvariance
-  console.log( introSnitch.currentWidth,introSnitch.currentHeight)
   intervalIntro = setInterval(refreshIntro, (1 / fps) * 1000)
 }
 

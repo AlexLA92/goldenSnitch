@@ -216,7 +216,7 @@ body {
 
 .right-animation-container img {
     position: fixed;
-    top:30vh;
+    top:50vh;
     right:-20rem;
     width: 20rem;
 }
