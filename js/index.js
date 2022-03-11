@@ -507,6 +507,7 @@ function updateScore(){
 function updateHighestScore(){
     if(game.score > highestScore){
       document.querySelector(".highscore-container span").textContent = game.score
+      highestScore = game.score
     }
 }
 
