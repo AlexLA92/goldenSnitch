@@ -8,6 +8,9 @@
     margin: 0;
 }
 
+.highscore-container p.ath{
+    font-size: 1rem;
+}
 
 body {
     display:flex;

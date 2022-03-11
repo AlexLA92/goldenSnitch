@@ -645,6 +645,10 @@ canvasElement.addEventListener('mousedown', function(event) {
   tryToCatch(event)
 })
 
+canvasElement.addEventListener('touchstart', function(event) {
+  tryToCatch(event)
+})
+
 /* 
 
 ------- INITIALIZATION ------- 
