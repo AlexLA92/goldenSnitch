@@ -38,6 +38,8 @@ body {
     flex-grow : 1;
     border: 1px solid black;
     position: relative;
+    width:100vw;
+    height: calc(100vh - 9rem);
 }
 
 
